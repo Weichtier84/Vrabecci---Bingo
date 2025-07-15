@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Bingo Card</title>
+    <style>
+        /* Basic styles for the page */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* The main container for our app */
+        .app-container {
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* The bingo board grid container */
+        #bingo-board {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            background-color: #4a90e2;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Individual bingo cells */
+        .bingo-cell {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            user-select: none;
+            padding: 5px;
+        }
+
+        /* Style for a cell when the mouse hovers over it */
+        .bingo-cell:hover {
+            background-color: #e9e9e9;
+        }
+
+        /* The style for a "marked" cell (after being clicked) */
+        .bingo-cell.marked {
+            background-color: #7ed321;
+            color: white;
+        }
+
+        /* --- STYLES FOR THE POP-UP --- */
+
+        /* The overlay that covers the whole screen */
+        #bingo-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        /* The actual pop-up box */
+        #bingo-popup-box {
+            background-color: white;
+            padding: 40px 80px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            animation: pop-in 0.3s ease-out;
+        }
+
+        #bingo-popup-box h2 {
+            font-size: 5em;
+            color: #4a90e2;
+            margin: 0;
+        }
+
+        #bingo-popup-box p {
+            font-size: 1.2em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* A simple animation for the pop-up appearing */
+        @keyframes pop-in {
+            from {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>My 3x3 Bingo Card</h1>
+        <div id="bingo-board">
+            <!-- --- YOUR CUSTOM CATEGORIES ARE HERE --- -->
+            <div class="bingo-cell">Anchor days</div>
+            <div class="bingo-cell">L4 level</div>
+            <div class="bingo-cell">Pervin is the best</div>
+            
+            <div class="bingo-cell">AI will take our jobs</div>
+            <div class="bingo-cell">FREE SPACE</div>
+            <div class="bingo-cell">Quality sucks</div>
+
+            <div class="bingo-cell">Information Management</div>
+            <div class="bingo-cell">Nathan sucks</div>
+            <div class="bingo-cell">Forgot to write agenda</div>
+        </div>
+    </div>
+
+    <!-- HTML FOR THE POP-UP -->
+    <div id="bingo-popup-overlay">
+        <div id="bingo-popup-box">
+            <h2>BINGO!</h2>
+            <p>Click to play again</p>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const cells = document.querySelectorAll('.bingo-cell');
+            const popupOverlay = document.getElementById('bingo-popup-overlay');
+
+            // Define all possible winning combinations
+            const winningCombinations = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Horizontal
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Vertical
+                [0, 4, 8], [2, 4, 6]             // Diagonal
+            ];
+
+            // Function to check for a win
+            function checkForBingo() {
+                return winningCombinations.some(combination => {
+                    return combination.every(index => {
+                        return cells[index].classList.contains('marked');
+                    });
+                });
+            }
+
+            // Function to reset the board
+            function resetBoard() {
+                popupOverlay.style.display = 'none';
+                cells.forEach(cell => {
+                    cell.classList.remove('marked');
+                });
+                // --- NEW: Re-mark the FREE SPACE after reset ---
+                markFreeSpace();
+            }
+
+            // --- NEW: Function to find and mark the FREE SPACE ---
+            function markFreeSpace() {
+                cells.forEach(cell => {
+                    if (cell.textContent.trim() === 'FREE SPACE') {
+                        cell.classList.add('marked');
+                    }
+                });
+            }
+
+            // --- Initialize the board by marking the FREE SPACE ---
+            markFreeSpace();
+
+            // Add a click event listener to each cell
+            cells.forEach(cell => {
+                cell.addEventListener('click', () => {
+                    if (popupOverlay.style.display === 'flex') {
+                        return;
+                    }
+                    // The FREE SPACE should not be un-clickable
+                    if (cell.textContent.trim() === 'FREE SPACE') {
+                        return;
+                    }
+
+                    cell.classList.toggle('marked');
+
+                    if (checkForBingo()) {
+                        popupOverlay.style.display = 'flex';
+                    }
+                });
+            });
+
+            // Add click listener to the pop-up to reset the game
+            popupOverlay.addEventListener('click', resetBoard);
+        });
+    </script>
+
+</body>
+</html>
